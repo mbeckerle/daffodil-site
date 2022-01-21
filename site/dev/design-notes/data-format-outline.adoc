@@ -1,0 +1,156 @@
+
+// ///////////////////////////////////////////////////////////////////////////
+//
+// This file is written in AsciiDoc.
+//
+// ///////////////////////////////////////////////////////////////////////////
+//
+// When editing, please start each sentence on a new line.
+// See https://asciidoctor.org/docs/asciidoc-recommended-practices/#one-sentence-per-line
+// [one sentence-per-line writing technique.]
+// This makes textual diffs of this file useful in a similar way to the way they work for code.
+//
+// //////////////////////////////////////////////////////////////////////////
+:page-layout: page
+:keywords: DFDL "data format"
+= Data Format Description
+:hide-uri-scheme:
+:toc:
+:toclevels: 20
+:sectlinks:
+:sectanchors:
+
+
+== Outline/Topic Mind Map
+
+[graphviz,"dataFormat.svg",svg,svg-type=inline]
+....
+digraph dataFormat1 {
+// layout = twopi
+// size = "7.5,10"
+center=1
+overlap=scale
+splines=true
+root="Data Format"
+rankdir=LR
+edge [dir=none]
+node [fontname="Noto Sans"]
+
+
+DF [label="Data\nFormat" style=bold shape=doublecircle ]
+
+DF -> Representation
+DF -> Length
+DF -> Dimension
+DF -> UC
+DF -> Types
+
+
+subgraph dimension {
+Dimension [ label="Dimension/\nRepetition" ]
+}
+
+subgraph length {
+Length -> Fixed, Implicit, Delimited, Stored
+Stored -> Prefixed, Separate
+
+}
+
+subgraph UseCases {
+UC [ label="Use Cases" ]
+UC -> "Data\nIntegration"
+UC -> "Data\nDirected\nRouting"
+UC -> "Cybersecurity"
+}
+
+subgraph representation {
+Representation ->  Text, Binary, Computed
+Computed [label="Computed\n(aka 'No Representation')" ]
+}
+
+subgraph text {
+Text
+Text -> Lines
+Lines [ label="Lines\nLine Endings" ]
+Text -> EncodingSystems
+EncodingSystems [label="Encoding\nSystems"]
+EncodingSystems -> FixedWidth, Variable
+Text -> EncErrors
+EncErrors [ label="Encoding/\nDecoding\nErrors" ]
+Text -> Delimited
+
+FixedWidth [ label="Fixed Width" ]
+FixedWidth -> SBCS, DBCS
+FixedWidth -> LessThan8
+LessThan8 [label="Less than 8\nBits Width"]
+Variable [ label="Variable\nWidth" ]
+Variable -> VCU
+VCU [ label="1..N Code Units"]
+Variable -> Shifting
+VCU -> "Unicode UTF-8"
+VCU -> "Unicode UTF-16"
+
+
+}
+
+subgraph binary {
+Binary [URL="#binary-data-formats"]
+Binary -> ByteOrder
+ByteOrder -> BitOrder
+Binary -> NumberRep
+NumberRep [ label="Number\nRepresentation" ]
+}
+
+subgraph clusterSimpleTypes {
+label="Simple Types"
+fontname="Noto Sans"
+Types -> Integer, FloatingPoint
+Types -> FixedPoint
+FixedPoint -> Scaled, Decimal
+Types -> DT
+Types -> String
+Types -> Opaque
+Opaque [ label="Opaque\nBytes/Bits" ]
+DT [label="Dates and Times"
+URL="#dates-and-times"]
+DT -> DateTime, Date, Time
+}
+
+}
+....
+
+== Binary Data Formats
+
+NOTE: TBD: Section on binary data formats.
+
+== Types
+
+=== Dates and Times
+
+For some reason in DFDL all the properties associate with dates and times contain the word calendar.
+
+NOTE: TBD: what is the reason
+
+== Textual Data Formats
+
+Intuitively, _text_ is what we call data representations that use the characters of natural language alphabets, scripts, and numeric digits that are used by people for writing.
+
+==== Text Terminology
+
+- character
+- lines
+-- line endings
+- charset, encoding, character set
+-- ASCII, ISO-8859-1, UTF-8, EBCDIC
+- code unit, width
+- code point
+- encode, decode
+- Unicode
+- glyph
+- whitespace
+-- space, tab, LF, CR
+- control characters
+-- CC0, CC1
+-- SBCS, DBCS
+
+
