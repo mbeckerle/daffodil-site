@@ -27,57 +27,97 @@
 ....
 digraph dataFormat1 {
 // layout = twopi
-// size = "7.5,10"
+// size = "7.5, 7.5"
 center=1
 overlap=scale
 splines=true
 root="Data Format"
 rankdir=LR
-edge [dir=none]
+edge [dir=none, fontname="Noto Sans"]
 node [fontname="Noto Sans"]
 
 
 DF [label="Data\nFormat" style=bold shape=doublecircle ]
 
 DF -> Representation
-DF -> Length
-DF -> Dimension
-DF -> UC
-DF -> Types
+Representation -> Length
+DF -> Statements
+Statements -> Assertions
+Statements -> Variables
+DF -> Correctness
+Correctness -> WF
+WF[label="well-formed"]
+Correctness -> Valid -> XSD
+XSD[label="XML Schema"]
+Valid -> Schematron
+XSD -> Facets -> "Pattern Facet" -> "XSD Regex"
+DF -> Logical -> Infoset -> Valid
+Logical -> Types
+Logical -> Dimension
+Logical -> Nilled
+WF -> Assertions
+Representation -> NilRep
+Representation -> Empty
 
+subgraph clusterEmpty {
+Empty -> Defaulting
+Defaulting -> "Use Nil As Default"
+Empty -> "Empty Value Delimiter Policy"
+Empty -> "Empty Value Parse Policy"
+}
+
+subgraph clusterNilRep {
+NilRep
+NilRep -> "Nil Values"
+NilRep -> "Nil Value Delimiter Policy"
+NilRep -> "Use Nil As Default"
+}
 
 subgraph dimension {
 Dimension [ label="Dimension/\nRepetition" ]
 }
 
 subgraph length {
-Length -> Fixed, Implicit, Delimited, Stored
-Stored -> Prefixed, Separate
-
-}
-
-subgraph UseCases {
-UC [ label="Use Cases" ]
-UC -> "Data\nIntegration"
-UC -> "Data\nDirected\nRouting"
-UC -> "Cybersecurity"
+label="Length Kinds"
+fontname="Noto Sans"
+Length -> Explicit, Implicit, Delimited, EndOfParent, Prefixed, Pattern, StopValue
+Explicit -> "Fixed Length"
+Explicit -> Stored
+"Length Units" -> "Bits/Bytes", Chars
+Implicit -> "Length Units"
+Prefixed -> "Length Units"
+Explicit -> "Length Units"
+Pattern -> "DFDL Regex"
 }
 
 subgraph representation {
 Representation ->  Text, Binary, Computed
-Computed [label="Computed\n(aka 'No Representation')" ]
+Computed [label="Computed\n(No Representation)" ]
 }
+Representation -> POU
 
 subgraph text {
 Text
 Text -> Lines
-Lines [ label="Lines\nLine Endings" ]
+Lines [ label="Lines &\nLine Endings" ]
 Text -> EncodingSystems
-EncodingSystems [label="Encoding\nSystems"]
+
+Text -> Padding -> Explicit
+
+Delimited -> Initiators -> Discriminators
+Delimited -> Separators -> "Separator Position"
+Separators -> "Separator Suppression"
+Delimited -> Terminators
+Delimited -> "Escape Schemes"
+
+Text -> Fake
+}
+
+subgraph clusterEncodingSystems {
+EncodingSystems [label="Encoding\nSystems\n(Character Sets)"]
 EncodingSystems -> FixedWidth, Variable
-Text -> EncErrors
+EncodingSystems -> EncErrors
 EncErrors [ label="Encoding/\nDecoding\nErrors" ]
-Text -> Delimited
 
 FixedWidth [ label="Fixed Width" ]
 FixedWidth -> SBCS, DBCS
@@ -89,27 +129,62 @@ VCU [ label="1..N Code Units"]
 Variable -> Shifting
 VCU -> "Unicode UTF-8"
 VCU -> "Unicode UTF-16"
-
-
 }
 
 subgraph binary {
 Binary [URL="#binary-data-formats"]
 Binary -> ByteOrder
 ByteOrder -> BitOrder
-Binary -> NumberRep
-NumberRep [ label="Number\nRepresentation" ]
+Binary -> BinNumberRep
+BinNumberRep [ label="Number\nRepresentation" ]
+BinNumberRep -> BinaryNR
+BinaryNR[label="Binary\n(Twos Complement)"]
+BinNumberRep -> Packed, BCD
+Binary -> Alignment
+Binary -> Fake
+Fake[label="Faking it\nwith\niso-8859-1"]
+Fake -> BitsEncoding, HexEncoding, OctalEncoding
+BitsEncoding[label="bits"]
+HexEncoding[label="hex"]
+OctalEncoding[label="octal"]
 }
 
+Types->SimpleTypes
+Types->ComplexTypes
+
+SimpleTypes[label="Simple\nTypes"]
+ComplexTypes[label="Complex\nTypes"]
+ComplexTypes -> Sequences
+ComplexTypes -> Choices
+
+subgraph clusterSequences {
+Sequences -> Ordered
+Sequences -> Unordered
+}
+
+POU -> Assertions
+POU -> Dimension
+Assertions -> "Pattern Test" -> Discriminators
+Assertions -> "Expression Test" -> Discriminators
+"Pattern Test" -> "DFDL Regex"
+"Pattern Test" -> Asserts
+"Expression Test" -> Asserts
+subgraph clusterChoices {
+Choices -> Discriminators
+Discriminators
+Choices -> "By Dispatch"
+}
+
+"Pattern Test" -> "DFDL Regex"
+"DFDL Regex" -> Lookahead
+
 subgraph clusterSimpleTypes {
-label="Simple Types"
-fontname="Noto Sans"
-Types -> Integer, FloatingPoint
-Types -> FixedPoint
+SimpleTypes -> Integer, FloatingPoint
+SimpleTypes -> FixedPoint
 FixedPoint -> Scaled, Decimal
-Types -> DT
-Types -> String
-Types -> Opaque
+SimpleTypes -> DT
+SimpleTypes -> String
+SimpleTypes -> Opaque
 Opaque [ label="Opaque\nBytes/Bits" ]
 DT [label="Dates and Times"
 URL="#dates-and-times"]
@@ -129,7 +204,8 @@ NOTE: TBD: Section on binary data formats.
 
 For some reason in DFDL all the properties associate with dates and times contain the word calendar.
 
-NOTE: TBD: what is the reason
+NOTE: This seems to be a legacy DFDL inherited from the Java programming language where the initial date/time-related library of classes were named using those terms, but these initial libraries were deemed insufficient.
+The next re-invention of these libraries didn't want to be confused with the earlier one, despite sharing many concepts, so the term "calendar" is used to distinguish them.
 
 == Textual Data Formats
 
@@ -151,6 +227,56 @@ Intuitively, _text_ is what we call data representations that use the characters
 -- space, tab, LF, CR
 - control characters
 -- CC0, CC1
--- SBCS, DBCS
+- SBCS, DBCS
 
 
+[graphviz,"dataFormat2.svg",svg,svg-type=inline]
+....
+digraph dataFormat2 {
+
+// size = "7.5,10"
+center=1
+overlap=scale
+splines=false
+root="Advanced"
+rankdir=LR
+edge [dir=none]
+node [fontname="Noto Sans"]
+
+
+A [label="Advanced" style=bold shape=doublecircle ]
+
+"Canonical Forms" -> "Round Trip"
+A -> UC
+
+
+subgraph UseCases {
+UC [ label="Use Cases" ]
+UC -> "Data\nIntegration"
+UC -> "Data\nDirected\nRouting"
+UC -> "Cybersecurity"
+
+"Cybersecurity" -> "Covert Channels" -> "Canonical Forms"
+}
+
+A -> ParserTopics
+ParserTopics -> StreamingOrNot
+ParserTopics -> ErrorRecovery
+ErrorRecovery -> VariablesWhenToUseThem
+A -> UnparserTopics
+UnparserTopics -> StreamingOrNot
+
+XSD -> NoRealArrays
+XSD -> RootElements
+XSD -> Namespaces -> Prefixes, TargetNS, DefaultNS
+XSD -> SchemaLocation -> Resolver -> JarFiles -> AutomatedDependencyManagement -> SBT, Maven
+
+A -> layers -> StreamingOrNot
+
+A -> BLOBs
+
+A-> "Parsing Syntax As Data"
+
+A -> TDML
+}
+....
