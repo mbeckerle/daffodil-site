@@ -23,11 +23,10 @@
 
 == Outline/Topic Mind Map
 
-[graphviz,"dataFormat.svg",svg,svg-type=inline]
+[graphviz,"dataFormat",svg,svg-type=inline]
 ....
-digraph dataFormat1 {
-// layout = twopi
-// size = "7.5, 7.5"
+digraph dataFormat {
+layout = dot
 center=1
 overlap=scale
 splines=true
@@ -44,6 +43,7 @@ Representation -> Length
 DF -> Statements
 Statements -> Assertions
 Statements -> Variables
+DF -> "Defining Forms" -> Variables, EscapeSchemes, Formats
 DF -> Correctness
 Correctness -> WF
 WF[label="well-formed"]
@@ -78,9 +78,13 @@ Dimension [ label="Dimension/\nRepetition" ]
 }
 
 subgraph length {
+Length -> LengthKind
+Length -> "Zero Length"
+Length -> Empty
+subgraph clusterLengthKind {
 label="Length Kinds"
 fontname="Noto Sans"
-Length -> Explicit, Implicit, Delimited, EndOfParent, Prefixed, Pattern, StopValue
+LengthKind -> Explicit, Implicit, Delimited, EndOfParent, Prefixed, Pattern, StopValue
 Explicit -> "Fixed Length"
 Explicit -> Stored
 "Length Units" -> "Bits/Bytes", Chars
@@ -88,6 +92,8 @@ Implicit -> "Length Units"
 Prefixed -> "Length Units"
 Explicit -> "Length Units"
 Pattern -> "DFDL Regex"
+}
+"DFDL Regex"
 }
 
 subgraph representation {
@@ -106,7 +112,7 @@ Text -> Padding -> Explicit
 
 Delimited -> Initiators -> Discriminators
 Delimited -> Separators -> "Separator Position"
-Separators -> "Separator Suppression"
+Separators -> "Separator Suppression" -> "Zero Length"
 Delimited -> Terminators
 Delimited -> "Escape Schemes"
 
@@ -121,13 +127,14 @@ EncErrors [ label="Encoding/\nDecoding\nErrors" ]
 
 FixedWidth [ label="Fixed Width" ]
 FixedWidth -> SBCS, DBCS
+DBCS -> "UCS-2"
 FixedWidth -> LessThan8
 LessThan8 [label="Less than 8\nBits Width"]
 Variable [ label="Variable\nWidth" ]
 Variable -> VCU
 VCU [ label="1..N Code Units"]
 Variable -> Shifting
-VCU -> "Unicode UTF-8"
+VCU -> "Unicode UTF-8" -> "Variant CESU-8"
 VCU -> "Unicode UTF-16"
 }
 
@@ -142,7 +149,7 @@ BinaryNR[label="Binary\n(Twos Complement)"]
 BinNumberRep -> Packed, BCD
 Binary -> Alignment
 Binary -> Fake
-Fake[label="Faking it\nwith\niso-8859-1"]
+Fake[label="Faking binary\nas text \nwith iso-8859-1"]
 Fake -> BitsEncoding, HexEncoding, OctalEncoding
 BitsEncoding[label="bits"]
 HexEncoding[label="hex"]
@@ -164,18 +171,21 @@ Sequences -> Unordered
 
 POU -> Assertions
 POU -> Dimension
-Assertions -> "Pattern Test" -> Discriminators
+POU -> Backtracked
+Asserts -> Discriminators
 Assertions -> "Expression Test" -> Discriminators
+Assertions -> "Pattern Test"
 "Pattern Test" -> "DFDL Regex"
 "Pattern Test" -> Asserts
 "Expression Test" -> Asserts
 subgraph clusterChoices {
-Choices -> Discriminators
+Choices -> Backtracked -> Discriminators
 Discriminators
 Choices -> "By Dispatch"
 }
 
-"Pattern Test" -> "DFDL Regex"
+Text -> "Regular Expressions" -> "DFDL Regex", "XSD Regex"
+
 "DFDL Regex" -> Lookahead
 
 subgraph clusterSimpleTypes {
@@ -215,26 +225,28 @@ Intuitively, _text_ is what we call data representations that use the characters
 
 - character
 - lines
--- line endings
+** line endings
 - charset, encoding, character set
--- ASCII, ISO-8859-1, UTF-8, EBCDIC
+** ASCII, ISO-8859-1, UTF-8, EBCDIC
 - code unit, width
 - code point
+- shifted encodings
 - encode, decode
+** Fallbacks, encoding errors, decoding errors
 - Unicode
 - glyph
 - whitespace
--- space, tab, LF, CR
+** space, tab, LF, CR
 - control characters
--- CC0, CC1
+** CC0, CC1
+** Unicode picture characters. Ex: &#x2403; (for ETX) or &#x2400; (for NUL)
 - SBCS, DBCS
 
 
-[graphviz,"dataFormat2.svg",svg,svg-type=inline]
+[graphviz,"dataFormat2",svg,svg-type=inline]
 ....
 digraph dataFormat2 {
 
-// size = "7.5,10"
 center=1
 overlap=scale
 splines=false
@@ -266,11 +278,6 @@ ErrorRecovery -> VariablesWhenToUseThem
 A -> UnparserTopics
 UnparserTopics -> StreamingOrNot
 
-XSD -> NoRealArrays
-XSD -> RootElements
-XSD -> Namespaces -> Prefixes, TargetNS, DefaultNS
-XSD -> SchemaLocation -> Resolver -> JarFiles -> AutomatedDependencyManagement -> SBT, Maven
-
 A -> layers -> StreamingOrNot
 
 A -> BLOBs
@@ -279,4 +286,58 @@ A-> "Parsing Syntax As Data"
 
 A -> TDML
 }
+....
+
+
+
+[graphviz,"dataFormat3",svg,svg-type=inline]
+....
+digraph dataFormat3 {
+center=1
+overlap=scale
+splines=false
+root="Advanced"
+rankdir=LR
+edge [dir=none]
+node [fontname="Noto Sans"]
+
+XSD -> NoRealArrays
+XSD -> RootElements
+XSD -> Namespaces -> Prefixes, TargetNS, DefaultNS
+XSD -> SchemaLocation -> Resolver -> JarFiles -> AutomatedDependencyManagement -> SBT, Maven
+Resolver -> "Compatibility" -> "XML Catalog"
+XML -> "For Data" -> "Line Endings"
+"For Data" -> "Illegal Characters"
+"For Data" -> "Whitespace"
+"For Data" -> Escaping -> CharEntities
+Escaping -> "CDATA Bracketing"
+XML -> XSD
+
+}
+....
+
+
+
+[graphviz,"dataFormat4",svg,svg-type=inline]
+....
+digraph dataFormat4 {
+// size = "7.5,10"
+center=1
+overlap=scale
+splines=false
+root="Advanced"
+rankdir=LR
+edge [dir=none]
+node [fontname="Noto Sans"]
+
+B [ label="Best Practices" ]
+B -> "Units of Measure" -> "In type names"
+"Units of Measure" -> "In element names"
+B -> namespaces
+B -> "directory structure" -> "Schema Composition"
+B -> "simpleType derivations for lengthKind 'explicit'"
+B -> "Transformation" -> Units
+
+}
+
 ....
