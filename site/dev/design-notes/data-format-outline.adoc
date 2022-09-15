@@ -31,7 +31,7 @@ center=1
 overlap=scale
 splines=true
 root="Data Format"
-rankdir=LR
+rankdir=TB
 edge [dir=none, fontname="Noto Sans"]
 node [fontname="Noto Sans"]
 
@@ -150,10 +150,9 @@ BinNumberRep -> Packed, BCD
 Binary -> Alignment
 Binary -> Fake
 Fake[label="Faking binary\nas text \nwith iso-8859-1"]
-Fake -> BitsEncoding, HexEncoding, OctalEncoding
-BitsEncoding[label="bits"]
-HexEncoding[label="hex"]
-OctalEncoding[label="octal"]
+Fake -> BitsEncodings
+BitsEncodings[label="bits, hex, and octal 'charsets'"]
+
 }
 
 Types->SimpleTypes
@@ -337,6 +336,7 @@ B -> namespaces
 B -> "directory structure" -> "Schema Composition"
 B -> "simpleType derivations for lengthKind 'explicit'"
 B -> "Transformation" -> Units
+B -> BIST
 
 }
 
